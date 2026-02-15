@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GhostCurve.Configuration/GhostCurve.Configuration.csproj" />
+    <Project Path="src/GhostCurve.Domain/GhostCurve.Domain.csproj" />
+    <Project Path="src/GhostCurve.Infrastructure/GhostCurve.Infrastructure.csproj" />
+    <Project Path="src/GhostCurve.Simulation/GhostCurve.Simulation.csproj" />
+    <Project Path="src/GhostCurve.Worker/GhostCurve.Worker.csproj" />
+  </Folder>
+</Solution>
