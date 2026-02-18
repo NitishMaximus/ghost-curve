@@ -7,12 +7,15 @@ public sealed class WalletTrackingOptions
 {
     public const string SectionName = "WalletTracking";
 
-    /// <summary>List of Solana wallet addresses to subscribe to via PumpPortal.</summary>
-    public List<string> TrackedWallets { get; set; } = [];
-
     /// <summary>
-    /// Optional friendly names for wallets, keyed by wallet address.
-    /// Used for logging and reporting only.
+    /// Dictionary of Solana wallet addresses to track with their friendly display names.
+    /// Key: wallet address, Value: alias/display name.
+    /// The wallet addresses (keys) are automatically subscribed via PumpPortal.
     /// </summary>
     public Dictionary<string, string> WalletAliases { get; set; } = new(StringComparer.Ordinal);
+
+    /// <summary>
+    /// Gets the list of wallet addresses to track (derived from WalletAliases keys).
+    /// </summary>
+    public List<string> TrackedWallets => WalletAliases.Keys.ToList();
 }

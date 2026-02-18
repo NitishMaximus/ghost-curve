@@ -21,6 +21,9 @@ public sealed class Position
     /// <summary>When this position was first opened.</summary>
     public DateTimeOffset OpenedAtUtc { get; set; }
 
+    /// <summary>Virtual SOL reserves in bonding curve when position was opened (market cap proxy).</summary>
+    public decimal VSolInBondingCurveAtOpen { get; set; }
+
     /// <summary>Number of buy trades that contributed to this position.</summary>
     public int BuyCount { get; set; }
 

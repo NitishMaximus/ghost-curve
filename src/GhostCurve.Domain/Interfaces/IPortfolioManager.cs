@@ -11,10 +11,10 @@ public interface IPortfolioManager
     VirtualWallet Wallet { get; }
 
     /// <summary>Record a buy — deduct SOL, add/update position.</summary>
-    void RecordBuy(string mint, decimal solAmount, decimal tokenAmount, decimal price, DateTimeOffset timestamp, string traderPublicKey);
+    void RecordBuy(string mint, decimal solAmount, decimal tokenAmount, decimal price, DateTimeOffset timestamp, string traderPublicKey, decimal vSolInBondingCurve);
 
     /// <summary>Record a sell — add SOL, reduce/close position, compute realized PnL.</summary>
-    decimal RecordSell(string mint, decimal solAmount, decimal tokenAmount, decimal price, DateTimeOffset timestamp, string traderPublicKey);
+    decimal RecordSell(string mint, decimal solAmount, decimal tokenAmount, decimal price, DateTimeOffset timestamp, string traderPublicKey, decimal vSolInBondingCurve);
 
     /// <summary>Calculate total unrealized PnL given current bonding curve prices.</summary>
     decimal CalculateUnrealizedPnl(Func<string, decimal> currentPriceResolver);

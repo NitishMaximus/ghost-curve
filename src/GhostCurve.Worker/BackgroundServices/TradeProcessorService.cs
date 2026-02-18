@@ -196,11 +196,11 @@ public sealed class TradeProcessorService : BackgroundService
         decimal? realizedPnl = null;
         if (intent.Side == TradeType.Buy)
         {
-            _portfolio.RecordBuy(intent.Mint, result.ActualSolAmount, result.ActualTokenAmount, result.EffectivePrice, tradeEvent.ReceivedAtUtc, tradeEvent.TraderPublicKey);
+            _portfolio.RecordBuy(intent.Mint, result.ActualSolAmount, result.ActualTokenAmount, result.EffectivePrice, tradeEvent.ReceivedAtUtc, tradeEvent.TraderPublicKey, tradeEvent.VSolInBondingCurve);
         }
         else
         {
-            realizedPnl = _portfolio.RecordSell(intent.Mint, result.ActualSolAmount, result.ActualTokenAmount, result.EffectivePrice, tradeEvent.ReceivedAtUtc, tradeEvent.TraderPublicKey);
+            realizedPnl = _portfolio.RecordSell(intent.Mint, result.ActualSolAmount, result.ActualTokenAmount, result.EffectivePrice, tradeEvent.ReceivedAtUtc, tradeEvent.TraderPublicKey, tradeEvent.VSolInBondingCurve);
         }
 
         // Update drawdown tracking

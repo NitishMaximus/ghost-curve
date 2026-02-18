@@ -137,10 +137,6 @@ Edit `src/GhostCurve.Worker/appsettings.json`:
 ```json
 {
   "WalletTracking": {
-    "TrackedWallets": [
-      "AArPXm8JatJiuyEffuC1un2Sc835SULa4uQqDcaGpAjV",
-      "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
-    ],
     "WalletAliases": {
       "AArPXm8JatJiuyEffuC1un2Sc835SULa4uQqDcaGpAjV": "SmartTrader",
       "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM": "WhaleWatcher"
@@ -484,7 +480,7 @@ Only the execution layer swaps out.
 **Causes:**
 - PumpPortal rate limiting (opening too many connections)
 - Network instability
-- Invalid wallet addresses in `TrackedWallets`
+- Invalid wallet addresses in `WalletAliases`
 
 **Fix:**
 - Ensure you're only running one instance

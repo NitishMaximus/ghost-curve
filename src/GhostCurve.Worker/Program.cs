@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using GhostCurve.Configuration;
 using GhostCurve.Domain.Interfaces;
 using GhostCurve.Domain.Models;
+using GhostCurve.Infrastructure.Notifications;
 using GhostCurve.Infrastructure.Persistence;
 using GhostCurve.Infrastructure.Persistence.Repositories;
 using GhostCurve.Infrastructure.WebSocket;
@@ -35,6 +36,7 @@ try
     builder.Services.Configure<WebSocketOptions>(builder.Configuration.GetSection(WebSocketOptions.SectionName));
     builder.Services.Configure<WalletTrackingOptions>(builder.Configuration.GetSection(WalletTrackingOptions.SectionName));
     builder.Services.Configure<ReplayOptions>(builder.Configuration.GetSection(ReplayOptions.SectionName));
+    builder.Services.Configure<TelegramOptions>(builder.Configuration.GetSection(TelegramOptions.SectionName));
 
     // ── Database ──
     builder.Services.AddDbContext<GhostCurveDbContext>(options =>
@@ -58,6 +60,9 @@ try
     builder.Services.AddSingleton<ITradeExecutor, SimulationTradeExecutor>();
     builder.Services.AddSingleton<IPortfolioManager, PortfolioManager>();
     builder.Services.AddSingleton<MetricsEngine>();
+
+    // ── Notifications ──
+    builder.Services.AddSingleton<ITelegramNotifier, TelegramNotifier>();
 
     // ── WebSocket client ──
     builder.Services.AddSingleton<PumpPortalClient>();

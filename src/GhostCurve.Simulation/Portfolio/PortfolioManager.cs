@@ -15,13 +15,21 @@ public sealed class PortfolioManager : IPortfolioManager
 {
     private readonly ILogger<PortfolioManager> _logger;
     private readonly WalletTrackingOptions _walletOptions;
+    private readonly TelegramOptions _telegramOptions;
+    private readonly ITelegramNotifier _telegramNotifier;
 
     public VirtualWallet Wallet { get; private set; } = new();
 
-    public PortfolioManager(ILogger<PortfolioManager> logger, IOptions<WalletTrackingOptions> walletOptions)
+    public PortfolioManager(
+        ILogger<PortfolioManager> logger,
+        IOptions<WalletTrackingOptions> walletOptions,
+        IOptions<TelegramOptions> telegramOptions,
+        ITelegramNotifier telegramNotifier)
     {
         _logger = logger;
         _walletOptions = walletOptions.Value;
+        _telegramOptions = telegramOptions.Value;
+        _telegramNotifier = telegramNotifier;
     }
 
     public void Reset(decimal initialSolBalance)
@@ -37,7 +45,7 @@ public sealed class PortfolioManager : IPortfolioManager
     /// <summary>
     /// Record a buy: deduct SOL from wallet, create or add to position.
     /// </summary>
-    public void RecordBuy(string mint, decimal solAmount, decimal tokenAmount, decimal price, DateTimeOffset timestamp, string traderPublicKey)
+    public void RecordBuy(string mint, decimal solAmount, decimal tokenAmount, decimal price, DateTimeOffset timestamp, string traderPublicKey, decimal vSolInBondingCurve)
     {
         if (Wallet.SolBalance < solAmount)
         {
@@ -49,6 +57,7 @@ public sealed class PortfolioManager : IPortfolioManager
         Wallet.SolBalance -= solAmount;
         Wallet.TotalTradeCount++;
 
+        decimal slippageBps = 0m; // Will be populated from execution result if needed
         if (Wallet.Positions.TryGetValue(mint, out var position))
         {
             // Add to existing position — update VWAP
@@ -69,19 +78,27 @@ public sealed class PortfolioManager : IPortfolioManager
                 AvgEntryPrice = price,
                 TotalCostBasis = solAmount,
                 OpenedAtUtc = timestamp,
+                VSolInBondingCurveAtOpen = vSolInBondingCurve,
                 BuyCount = 1
             };
         }
 
         _logger.LogInformation("BUY {Mint} by {Wallet}: {SolAmt:F6} SOL → {TokenAmt:F4} tokens @ {Price:F12} | Balance: {Bal:F6} SOL",
             mint, GetWalletDisplayName(traderPublicKey), solAmount, tokenAmount, price, Wallet.SolBalance);
+
+        // Send Telegram notification (only if above threshold)
+        if (solAmount >= _telegramOptions.MinBuyAmountSolForNotification)
+        {
+            var walletDisplay = GetWalletDisplayName(traderPublicKey);
+            _ = _telegramNotifier.NotifyBuyAsync(mint, walletDisplay, solAmount, tokenAmount, price, slippageBps, vSolInBondingCurve);
+        }
     }
 
     /// <summary>
     /// Record a sell: add SOL to wallet, reduce/close position, compute realized PnL.
     /// Returns the realized PnL for this sell.
     /// </summary>
-    public decimal RecordSell(string mint, decimal solAmount, decimal tokenAmount, decimal price, DateTimeOffset timestamp, string traderPublicKey)
+    public decimal RecordSell(string mint, decimal solAmount, decimal tokenAmount, decimal price, DateTimeOffset timestamp, string traderPublicKey, decimal vSolInBondingCurve)
     {
         Wallet.TotalTradeCount++;
 
@@ -90,6 +107,9 @@ public sealed class PortfolioManager : IPortfolioManager
             _logger.LogWarning("No open position for {Mint} — skipping sell", mint);
             return 0;
         }
+
+        // Capture market cap data for notification
+        var vSolAtBuy = position.VSolInBondingCurveAtOpen;
 
         // Clamp to actual position size
         var actualTokensSold = Math.Min(tokenAmount, position.TokenBalance);
@@ -136,6 +156,17 @@ public sealed class PortfolioManager : IPortfolioManager
 
         _logger.LogInformation("SELL {Mint} by {Wallet}: {TokenAmt:F4} tokens → {SolAmt:F6} SOL @ {Price:F12} | PnL: {Pnl:+0.000000;-0.000000;0.000000} SOL | Balance: {Bal:F6} SOL",
             mint, GetWalletDisplayName(traderPublicKey), actualTokensSold, actualSolReceived, price, realizedPnl, Wallet.SolBalance);
+
+        // Send Telegram notification
+        var walletDisplay = GetWalletDisplayName(traderPublicKey);
+        _ = _telegramNotifier.NotifySellAsync(
+            mint,
+            walletDisplay,
+            actualTokensSold,
+            actualSolReceived,
+            realizedPnl,
+            vSolAtBuy,
+            vSolInBondingCurve);
 
         return realizedPnl;
     }
